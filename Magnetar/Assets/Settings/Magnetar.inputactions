@@ -25,39 +25,39 @@
                 },
                 {
                     "name": "ShootNormal",
-                    "type": "Button",
+                    "type": "Value",
                     "id": "c2d6c09c-888d-41c3-8a86-dbda80487351",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
-                    "initialStateCheck": false
+                    "initialStateCheck": true
                 },
                 {
                     "name": "ShootPositive",
-                    "type": "Button",
+                    "type": "Value",
                     "id": "e198657f-87ac-4ef3-b102-c3da85445d6d",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
-                    "initialStateCheck": false
+                    "initialStateCheck": true
                 },
                 {
                     "name": "ShootNegative",
-                    "type": "Button",
+                    "type": "Value",
                     "id": "0e1eaa63-c613-48f0-bc48-96b3e0f67f22",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
-                    "initialStateCheck": false
+                    "initialStateCheck": true
                 },
                 {
                     "name": "Boost",
-                    "type": "Button",
+                    "type": "Value",
                     "id": "fc85cd7e-37b2-46ff-bbd4-c030c3b0135f",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
-                    "initialStateCheck": false
+                    "initialStateCheck": true
                 }
             ],
             "bindings": [

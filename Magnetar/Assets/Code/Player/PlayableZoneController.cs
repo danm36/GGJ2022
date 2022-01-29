@@ -1,3 +1,4 @@
+using Cinemachine;
 using SplineEditor;
 using System.Collections;
 using System.Collections.Generic;
@@ -8,12 +9,18 @@ namespace Magnetar
     public class PlayableZoneController : MonoBehaviour
     {
         public bool IsPlaying { get; private set; }
+        public bool PlayerHasControl { get; private set; }
         public Vector3 Velocity { get; private set; }
 
         public BezierSpline targetSpline;
         private SplinePath splinePath;
         private float splineProgress = 0.0f;
         public float splineProgressionSpeed = 32.0f;
+
+        public CinemachineVirtualCamera introCamera;
+        public float introCameraHoldTime = 2.5f;
+        public CinemachineVirtualCamera defaultCamera;
+        private List<CinemachineVirtualCamera> cameras = new List<CinemachineVirtualCamera>();
 
         private PlayerController player;
 
@@ -22,6 +29,13 @@ namespace Magnetar
         void Awake()
         {
             player = GetComponentInChildren<PlayerController>();
+
+            foreach(var cam in GetComponentsInChildren<CinemachineVirtualCamera>())
+            {
+                cameras.Add(cam);
+                cam.enabled = false;
+            }
+            introCamera.enabled = true;
         }
 
         void Start()
@@ -38,7 +52,19 @@ namespace Magnetar
             targetSpline.GetEvenlySpacedPoints(1.0f, splinePath);
             player.Initialize(this);
 
+            StartCoroutine(Initialize_Intro());
+
             IsPlaying = true;
+        }
+
+        private IEnumerator Initialize_Intro()
+        {
+            yield return new WaitForSeconds(introCameraHoldTime);
+            introCamera.enabled = false;
+            defaultCamera.enabled = true;
+
+            yield return new WaitForSeconds(0.5f);
+            PlayerHasControl = true;
         }
 
         // Update is called once per frame
@@ -66,6 +92,7 @@ namespace Magnetar
 
                 if (point2Idx >= splinePath.Points.Count)
                 {
+                    Velocity = Vector3.zero;
                     Debug.LogWarning("Reached end of path!");
                     return;
                 }
@@ -78,8 +105,8 @@ namespace Magnetar
 
             transform.position = Vector3.Lerp(splinePath.Points[point1Idx], splinePath.Points[point2Idx], lerpProgress);
             transform.rotation = Quaternion.Slerp(
-                Quaternion.LookRotation(forward, Vector3.Cross(splinePath.Normals[point1Idx], splinePath.Tangents[point1Idx])),
-                Quaternion.LookRotation(forward, Vector3.Cross(splinePath.Normals[point2Idx], splinePath.Tangents[point2Idx])),
+                Quaternion.LookRotation(forward, splinePath.Normals[point1Idx]),
+                Quaternion.LookRotation(forward, splinePath.Normals[point2Idx]),
                 lerpProgress);
 
             splineProgress += Time.deltaTime * splineProgressionSpeed;

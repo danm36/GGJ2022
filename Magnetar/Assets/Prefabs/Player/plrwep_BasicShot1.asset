@@ -10,13 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1277289bc1b62244a8cd7f869c220656, type: 3}
-  m_Name: BasicShot
+  m_Name: plrwep_BasicShot1
   m_EditorClassIdentifier: 
-  displayName: Basic Cannon
+  displayName: Single Cannon
   slot: 0
-  equipCost: 1
+  equipCost: 2
   bullets:
   - bullet: {fileID: 2022686890363381599, guid: 9a1e9f467ed80bb4c85bc2c39c2518e8,
       type: 3}
-    initialVelocity: {x: 0, y: 1}
-  shotCooldown: 0.5
+    spawnOffset: {x: 0, y: 0}
+    initialVelocity: {x: 0, y: 128}
+  shotCooldown: 0.2

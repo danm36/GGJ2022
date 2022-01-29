@@ -19,6 +19,7 @@ namespace Magnetar
         public class WeaponBulletEntry
         {
             public Bullet bullet;
+            public Vector2 spawnOffset = Vector2.zero;
             public Vector2 initialVelocity = new Vector2(0, 1);
         }
 
@@ -28,14 +29,13 @@ namespace Magnetar
         public List<WeaponBulletEntry> bullets = new List<WeaponBulletEntry>();
         public float shotCooldown = 0.5f;
 
-        public void SpawnBullets(bool isPlayerOwner, Vector3 spawnPosition, Quaternion spawnRotation, Vector3 spawnVelocity)
+        public void SpawnBullets(bool isPlayerOwner, Transform bulletSpawnSpace, Vector3 spawnPosition, Quaternion spawnRotation)
         {
-            Debug.Log($"Spawning bullets with velocity {spawnVelocity}");
             foreach (WeaponBulletEntry e in bullets)
             {
                 Bullet b = BulletPool.Instance.GetBullet(e.bullet);
                 // TODO: Velocity isn't working
-                b.Initialize(isPlayerOwner, spawnPosition, spawnRotation, spawnVelocity + spawnRotation * new Vector3(e.initialVelocity.x, 0.0f, e.initialVelocity.y));
+                b.Initialize(isPlayerOwner, bulletSpawnSpace, spawnPosition + bulletSpawnSpace.rotation * new Vector3(e.spawnOffset.x, 0.0f, e.spawnOffset.y), spawnRotation, new Vector3(e.initialVelocity.x, 0.0f, e.initialVelocity.y));;
             }
         }
     }

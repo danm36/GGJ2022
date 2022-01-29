@@ -47,44 +47,18 @@ namespace Magnetar
             weapons.Clear();
             foreach (EquipableWeapon weapon in equipableWeapons)
             {
-                weapons.Add(new WeaponTrackingEntry()
+                if (weapon != null)
                 {
-                    weapon = weapon
-                });
+                    weapons.Add(new WeaponTrackingEntry()
+                    {
+                        weapon = weapon
+                    });
+                }
             }
         }
 
         void Update()
         {
-            float boostedSpeed = maxShipSpeed * boostMultiplier;
-            Vector3 targetVelocity = new Vector3(moveVec.x, 0, moveVec.y) * (isBoosting ? boostedSpeed : maxShipSpeed);
-
-            // Constrain to bounds by overriding specific player controls
-            float recoveryAmount = Time.deltaTime * BOUNDS_RECOVERY_RATE * boostedSpeed;
-            if (transform.localPosition.x < -PLAYER_BOUNDS.x)
-            {
-                targetVelocity.x = Mathf.Min(velocity.x + recoveryAmount, boostedSpeed);
-            }
-            else if (transform.localPosition.x > PLAYER_BOUNDS.x)
-            {
-                targetVelocity.x = Mathf.Max(velocity.x - recoveryAmount, -boostedSpeed);
-            }
-            else if (transform.localPosition.z < -PLAYER_BOUNDS.y)
-            {
-                targetVelocity.z = Mathf.Min(velocity.z + recoveryAmount, boostedSpeed);
-            }
-            else if (transform.localPosition.z > PLAYER_BOUNDS.y)
-            {
-                targetVelocity.z = Mathf.Max(velocity.z - recoveryAmount, -boostedSpeed);
-            }
-
-            velocity = Vector3.Lerp(velocity, targetVelocity, 0.1f);
-
-            Quaternion targetRotation = Quaternion.Euler(0.0f, 0.0f, Mathf.Clamp(-velocity.x / maxShipSpeed * MAX_Z_TILT, -MAX_Z_TILT, MAX_Z_TILT));
-
-            transform.Translate(velocity * Time.deltaTime);
-            modelTransform.localRotation = targetRotation;
-
             // Handle shooting
             foreach(WeaponTrackingEntry w in weapons)
             {
@@ -106,10 +80,50 @@ namespace Magnetar
 
                 if(doShoot && w.cooldown <= 0.0f)
                 {
-                    w.weapon.SpawnBullets(true, transform.position, transform.rotation, velocity + Parent.Velocity);
+                    w.weapon.SpawnBullets(true, Parent.transform, transform.position, transform.rotation);
                     w.cooldown = w.weapon.shotCooldown;
                 }
             }
+        }
+
+        private void FixedUpdate()
+        {
+            float boostedSpeed = maxShipSpeed * boostMultiplier;
+            Vector3 targetVelocity;
+            if(Parent.PlayerHasControl)
+            {
+                targetVelocity = new Vector3(moveVec.x, 0, moveVec.y) * (isBoosting ? boostedSpeed : maxShipSpeed);
+            }
+            else
+            {
+                targetVelocity = Vector3.zero;
+            }
+
+            // Constrain to bounds by overriding specific player controls
+            float recoveryAmount = Time.fixedDeltaTime * BOUNDS_RECOVERY_RATE * boostedSpeed;
+            if (transform.localPosition.x < -PLAYER_BOUNDS.x)
+            {
+                targetVelocity.x = Mathf.Min(velocity.x + recoveryAmount, boostedSpeed);
+            }
+            else if (transform.localPosition.x > PLAYER_BOUNDS.x)
+            {
+                targetVelocity.x = Mathf.Max(velocity.x - recoveryAmount, -boostedSpeed);
+            }
+            else if (transform.localPosition.z < -PLAYER_BOUNDS.y)
+            {
+                targetVelocity.z = Mathf.Min(velocity.z + recoveryAmount, boostedSpeed);
+            }
+            else if (transform.localPosition.z > PLAYER_BOUNDS.y)
+            {
+                targetVelocity.z = Mathf.Max(velocity.z - recoveryAmount, -boostedSpeed);
+            }
+
+            velocity = Vector3.Lerp(velocity, targetVelocity, 0.1f);
+
+            Quaternion targetRotation = Quaternion.Euler(0.0f, 0.0f, Mathf.Clamp(-velocity.x / maxShipSpeed * MAX_Z_TILT, -MAX_Z_TILT, MAX_Z_TILT));
+
+            transform.Translate(velocity * Time.fixedDeltaTime);
+            modelTransform.localRotation = targetRotation;
         }
 
         public void OnMove(InputValue value)

@@ -11,6 +11,8 @@ namespace Magnetar
 
         Dictionary<string, List<Bullet>> bulletPools = new Dictionary<string, List<Bullet>>();
 
+        private List<Bullet> activeBullets = new List<Bullet>(2048);
+
         private void Awake()
         {
             if(Instance != null)
@@ -22,7 +24,7 @@ namespace Magnetar
                 Instance = this;
             }
         }
-        
+
         public T GetBullet<T>(T prefab) where T : Bullet
         {
             if(!bulletPools.ContainsKey(prefab.name))
@@ -39,13 +41,15 @@ namespace Magnetar
 
             bullet.transform.SetParent(null);
             bullet.gameObject.SetActive(true);
+            activeBullets.Add(bullet);
             return bullet;
         }
 
-        public void ReturnToPool(Bullet b)
+        public void ReturnToPool(Bullet bullet)
         {
-            b.transform.SetParent(transform);
-            b.gameObject.SetActive(false);
+            bullet.transform.SetParent(transform);
+            bullet.gameObject.SetActive(false);
+            activeBullets.Remove(bullet);
         }
     }
 }
