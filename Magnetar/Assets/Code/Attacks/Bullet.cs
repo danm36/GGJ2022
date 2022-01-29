@@ -10,26 +10,25 @@ namespace Magnetar
     {
         public bool IsActive => elapsedLife <= lifeTime;
 
-        public VisualEffect effect;
         public float damage = 1.0f;
         public float lifeTime = 5.0f;
 
         private Vector3 localVelocity;
         private Vector3 globalVelocity = Vector3.zero;
         private float elapsedLife = 0.0f;
-        private Magnet myMagnet;
+        public Magnet MyMagnet { get; private set; }
 
         /// <summary>
         /// Sets up the bullet as if it's just spawned.
         /// </summary>
-        /// <param name="isPlayerBullet">Handles appropiate collision flags.</param>
         /// <param name="bulletSpawnSpace">The parent of the spawned bullet.</param>
         /// <param name="spawnPosition">The world position to spawn the bullet.</param>
         /// <param name="spawnRotation">The world rotation to spawn the bullet.</param>
         /// <param name="initialVelocity">The world velocity of this bullet.</param>
-        public void Initialize(bool isPlayerBullet, Transform bulletSpawnSpace, Vector3 spawnPosition, Quaternion spawnRotation, Vector3 initialVelocity)
+        /// <param name="playerID">Handles appropiate collision flags.</param>
+        public virtual void Initialize(Transform bulletSpawnSpace, Vector3 spawnPosition, Quaternion spawnRotation, Vector3 initialVelocity, int playerID)
         {
-            if(isPlayerBullet)
+            if(playerID > 0)
             {
                 gameObject.layer = LayerMask.NameToLayer("PlayerBullet");
             }
@@ -48,31 +47,43 @@ namespace Magnetar
 
         private void Start()
         {
-            GetComponent<Collider>().isTrigger = true;
-            myMagnet = GetComponent<Magnet>();
+            MyMagnet = GetComponent<Magnet>();
         }
 
-        private void Update()
+        protected virtual void Update()
         {
-            if(myMagnet != null)
+            if (MyMagnet != null)
             {
-                globalVelocity += myMagnet.DesiredWorldVelocity * Time.deltaTime;
+                globalVelocity += MyMagnet.DesiredWorldVelocity * Time.deltaTime;
             }
-
-            Vector3 vel = localVelocity + transform.InverseTransformVector(globalVelocity);
-            vel.y = 0;
-            transform.Translate(vel * Time.deltaTime, Space.Self);
 
             elapsedLife += Time.deltaTime;
             if(elapsedLife > lifeTime)
             {
-                BulletPool.Instance.ReturnToPool(this);
+                OnBulletDestroy();
             }
         }
 
-        private void OnTriggerEnter(Collider other)
+        protected virtual void FixedUpdate()
         {
-            Debug.Log(other);
+            Vector3 vel = localVelocity + transform.InverseTransformVector(globalVelocity);
+            vel.y = 0;
+            transform.Translate(vel * Time.deltaTime, Space.Self);
+        }
+
+        protected virtual void OnBulletDestroy()
+        {
+            BulletPool.Instance.ReturnToPool(this);
+        }
+
+        protected virtual void OnCollisionEnter(Collision collision)
+        {
+            HealthComponent hp = collision.collider.GetComponent<HealthComponent>();
+            if (hp != null)
+            {
+                hp.Hurt(collision, damage);
+                OnBulletDestroy();
+            }
         }
     }
 }

@@ -13,8 +13,9 @@ GameObject:
   - component: {fileID: 8646637453825288425}
   - component: {fileID: 642494148}
   - component: {fileID: 5328781045671229375}
+  - component: {fileID: 2447194665576516327}
   m_Layer: 6
-  m_Name: PlayerShip Variant
+  m_Name: PlayerShip
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -78,11 +79,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2eb9db050e4fe645a8d933d9ae56caa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  modelTransform: {fileID: 8209795473783652158}
-  maxShipSpeed: 60
-  boostMultiplier: 2.5
-  equipableWeapons:
-  - {fileID: 11400000, guid: 09a3200356766e446bfac4ae687915c9, type: 2}
+  <ModelTransform>k__BackingField: {fileID: 8209795473783652158}
+  <HitEffect>k__BackingField: {fileID: 6440599582345667430, guid: 7c0d2d798d1139a47889be1e3ebb6292,
+    type: 3}
+  <DeathEffect>k__BackingField: {fileID: 2763103092331272050, guid: 66f57ce675a26f145a96f4f736b550d7,
+    type: 3}
+  <MaxShipSpeed>k__BackingField: 60
+  <BoostMultiplier>k__BackingField: 2.5
+  <EquippedWeapons>k__BackingField:
+  - {fileID: 11400000, guid: c5939a3a7c4b28d4ab089746a1631702, type: 2}
+  - {fileID: 11400000, guid: a723c42860f996046ae891b364b07be9, type: 2}
+  - {fileID: 11400000, guid: aba90c725b7d3b24ea0aedcc9bff2369, type: 2}
+  - {fileID: 11400000, guid: 41ddcbe9210fdf842bda79fa055050eb, type: 2}
 --- !u!114 &5328781045671229375
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -111,9 +119,23 @@ MonoBehaviour:
   m_ActionEvents: []
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
-  m_DefaultActionMap: Player
+  m_DefaultActionMap: c69af3f2-2346-43b5-a465-8d012cc945ec
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 0}
+--- !u!114 &2447194665576516327
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4081878716906400082}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 302930a62580691409e23497b6bf8176, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  <MaxHealth>k__BackingField: 100
+  <CurrentHealth>k__BackingField: -1
 --- !u!1001 &8531422985843022037
 PrefabInstance:
   m_ObjectHideFlags: 0

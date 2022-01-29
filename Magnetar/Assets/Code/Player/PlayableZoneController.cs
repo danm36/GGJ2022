@@ -6,41 +6,51 @@ using UnityEngine;
 
 namespace Magnetar
 {
+    [RequireComponent(typeof(BoxCollider))]
     public class PlayableZoneController : MonoBehaviour
     {
+        public static readonly Vector2 DEFAULT_PLAYER_BOUNDS = new Vector2(100.0f, 60.0f);
+
+        public static PlayableZoneController Instance { get; private set; }
         public bool IsPlaying { get; private set; }
         public bool PlayerHasControl { get; private set; }
         public Vector3 Velocity { get; private set; }
 
-        public BezierSpline targetSpline;
+        public Vector2 PlayerBounds { get; private set; } = new Vector2(DEFAULT_PLAYER_BOUNDS.x, DEFAULT_PLAYER_BOUNDS.y);
+
+        [field: SerializeField] public BezierSpline TargetSpline { get; private set; }
         private SplinePath splinePath;
         private float splineProgress = 0.0f;
-        public float splineProgressionSpeed = 32.0f;
+        [field: SerializeField] public float SplineProgressionSpeed { get; private set; } = 32.0f;
 
-        public CinemachineVirtualCamera introCamera;
-        public float introCameraHoldTime = 2.5f;
-        public CinemachineVirtualCamera defaultCamera;
+        [field: SerializeField] public CinemachineVirtualCamera IntroCamera { get; private set; }
+        [field: SerializeField] public float IntroCameraHoldTime { get; private set; } = 2.5f;
+        [field: SerializeField] public CinemachineVirtualCamera DefaultCamera { get; private set; }
         private List<CinemachineVirtualCamera> cameras = new List<CinemachineVirtualCamera>();
 
-        private PlayerController player;
+        public PlayerController Player { get; private set; }
+        public BoxCollider EnemySpawnTrigger { get; private set; }
 
 
         // Start is called before the first frame update
         void Awake()
         {
-            player = GetComponentInChildren<PlayerController>();
+            Player = GetComponentInChildren<PlayerController>();
+            EnemySpawnTrigger = GetComponent<BoxCollider>();
+            EnemySpawnTrigger.isTrigger = true;
+            EnemySpawnTrigger.size = new Vector3(PlayerBounds.x * 2, 8.0f, PlayerBounds.y * 2.0f);
 
-            foreach(var cam in GetComponentsInChildren<CinemachineVirtualCamera>())
+            foreach (var cam in GetComponentsInChildren<CinemachineVirtualCamera>())
             {
                 cameras.Add(cam);
                 cam.enabled = false;
             }
-            introCamera.enabled = true;
+            IntroCamera.enabled = true;
         }
 
         void Start()
         {
-            if (targetSpline != null)
+            if (TargetSpline != null)
             {
                 Initialize();
             }
@@ -48,9 +58,14 @@ namespace Magnetar
 
         public void Initialize()
         {
+            if(Instance != null)
+            {
+                Destroy(Instance);
+            }
+            Instance = this;
+
             splinePath = new SplinePath();
-            targetSpline.GetEvenlySpacedPoints(1.0f, splinePath);
-            player.Initialize(this);
+            TargetSpline.GetEvenlySpacedPoints(1.0f, splinePath);
 
             StartCoroutine(Initialize_Intro());
 
@@ -59,9 +74,9 @@ namespace Magnetar
 
         private IEnumerator Initialize_Intro()
         {
-            yield return new WaitForSeconds(introCameraHoldTime);
-            introCamera.enabled = false;
-            defaultCamera.enabled = true;
+            yield return new WaitForSeconds(IntroCameraHoldTime);
+            IntroCamera.enabled = false;
+            DefaultCamera.enabled = true;
 
             yield return new WaitForSeconds(0.5f);
             PlayerHasControl = true;
@@ -80,7 +95,7 @@ namespace Magnetar
             int point1Idx;
             int point2Idx;
 
-            if (targetSpline.IsLoop)
+            if (TargetSpline.IsLoop)
             {
                 point1Idx = Mathf.FloorToInt(splineProgress) % splinePath.Points.Count;
                 point2Idx = Mathf.CeilToInt(splineProgress) % splinePath.Points.Count;
@@ -109,8 +124,25 @@ namespace Magnetar
                 Quaternion.LookRotation(forward, splinePath.Normals[point2Idx]),
                 lerpProgress);
 
-            splineProgress += Time.deltaTime * splineProgressionSpeed;
+            splineProgress += Time.deltaTime * SplineProgressionSpeed;
             Velocity = (transform.position - oldPosition) / Time.deltaTime; 
+
+            foreach(var trigger in SplineAttachedEnemySpawnTrigger.ArmedTriggers)
+            {
+                if(trigger.SplineToAttachTo == TargetSpline && trigger.SplineTriggerPoint <= splineProgress)
+                {
+                    trigger.Trigger();
+                }
+            }
         }
+
+#if UNITY_EDITOR
+        private void OnDrawGizmos()
+        {
+            Gizmos.color = Color.cyan;
+            Gizmos.matrix = transform.localToWorldMatrix;
+            Gizmos.DrawWireCube(Vector3.zero, new Vector3(PlayerBounds.x * 2, 1.0f, PlayerBounds.y * 2.0f));
+        }
+#endif
     }
 }
