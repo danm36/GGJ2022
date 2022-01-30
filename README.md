@@ -1,3 +1,4 @@
+![The Magnetar Logo](https://static.novadawnstudios.co.uk/static/assets/Magnetar_Logo_fc416332d3.png)
 # Magnetar
 
 Daniel Masterson's ([Website](https://masterof.dev/)) Global Game Jam 2022 submission. The game was developed using Unity version 2021.2.9f1.
