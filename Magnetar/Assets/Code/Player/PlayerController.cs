@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.VFX;
 
 namespace Magnetar
 {
@@ -12,12 +13,16 @@ namespace Magnetar
         const float MAX_Z_TILT = 15.0f;
         const float BOUNDS_RECOVERY_RATE = 30.0f;
 
+        public static bool AutofireEnabled { get; private set; } = true;
+
         public PlayableZoneController Parent { get; private set; }
 
         [field: SerializeField] public int PlayerID { get; private set; } = 1;
         [field: SerializeField] public Transform ModelTransform { get; private set; }
         [field: SerializeField] public OneShotEffect HitEffect { get; private set; }
         [field: SerializeField] public OneShotEffect DeathEffect { get; private set; }
+        [field: SerializeField] public List<VisualEffect> PositiveModeThrusterEffects { get; private set; }
+        [field: SerializeField] public List<VisualEffect> NegativeModeThrusterEffects { get; private set; }
 
         [field: SerializeField] public float MaxShipSpeed { get; private set; } = 60.0f;
         [field: SerializeField] public float BoostMultiplier { get; private set; } = 2.5f;
@@ -26,27 +31,34 @@ namespace Magnetar
         Vector3 velocity = Vector3.zero;
         private bool isBoosting = false;
 
-        private HealthComponent healthComponent;
+        public HealthComponent HealthComponent { get; private set; }
+        public Magnet MagnetComponent { get; private set; }
 
         [field: SerializeField] public List<EquipableWeapon> EquippedWeapons { get; private set; } = new List<EquipableWeapon>();
         private List<RuntimeWeaponTrackingEntry> weapons = new List<RuntimeWeaponTrackingEntry>();
 
-        private bool isShootingNormal = false;
-        private bool isShootingPositive = false;
-        private bool isShootingNegative = false;
+        private bool isShooting = false;
 
         void OnEnable()
         {
             Parent = GetComponentInParent<PlayableZoneController>();
 
-            healthComponent = GetComponent<HealthComponent>();
-            if(healthComponent == null)
+            HealthComponent = GetComponent<HealthComponent>();
+            if(HealthComponent == null)
             {
-                throw new NullReferenceException("No health component has been added to the player!");
+                Debug.LogError("No health component has been added to the player!");
+                return;
             }
 
-            healthComponent.OnHurt += OnHurt;
-            healthComponent.OnDeath += OnDeath;
+            HealthComponent.OnHurt += OnHurt;
+            HealthComponent.OnDeath += OnDeath;
+
+            MagnetComponent = GetComponent<Magnet>();
+            if (MagnetComponent == null)
+            {
+                Debug.LogError("No magnet component has been added to the player!", gameObject);
+                return;
+            }
 
             weapons.Clear();
             foreach (EquipableWeapon weapon in EquippedWeapons)
@@ -56,14 +68,15 @@ namespace Magnetar
                     weapons.Add(new RuntimeWeaponTrackingEntry(weapon));
                 }
             }
+
         }
 
         private void OnDisable()
         {
-            if(healthComponent != null)
+            if(HealthComponent != null)
             {
-                healthComponent.OnHurt -= OnHurt;
-                healthComponent.OnDeath -= OnDeath;
+                HealthComponent.OnHurt -= OnHurt;
+                HealthComponent.OnDeath -= OnDeath;
             }
         }
 
@@ -74,25 +87,13 @@ namespace Magnetar
             {
                 w.Update();
 
-                bool doShoot;
-                if(w.Weapon.slot == EWeaponSlot.Magnetic_Positive)
-                {
-                    doShoot = isShootingPositive;
-                }
-                else if (w.Weapon.slot == EWeaponSlot.Magnetic_Negative)
-                {
-                    doShoot = isShootingNegative;
-                }
-                else
-                {
-                    doShoot = isShootingNormal;
-                }
-
-                if(doShoot)
+                if(isShooting || AutofireEnabled)
                 {
                     w.TryShoot(Parent.transform, transform.position, transform.rotation, PlayerID);
                 }
             }
+
+            UpdateThrusterEffects();
         }
 
         private void FixedUpdate()
@@ -150,17 +151,27 @@ namespace Magnetar
 
         public void OnShootNormal(InputValue value)
         {
-            isShootingNormal = value.isPressed;
+            if (!Parent.IsTwoShipMode)
+            {
+                MagnetComponent.magnetismStrength *= -1;
+            }
         }
 
-        public void OnShootPositive(InputValue value)
+        public void OnToggleAutofire(InputValue value)
         {
-            isShootingPositive = value.isPressed;
+            if (value.isPressed)
+            {
+                AutofireEnabled = !AutofireEnabled;
+            }
         }
 
-        public void OnShootNegative(InputValue value)
+        public void OnOpenPauseMenu(InputValue value)
         {
-            isShootingNegative = value.isPressed;
+            // TODO: Don't just immediately go to the main menu.
+            if (value.isPressed)
+            {
+                GamePersistance.Instance.GoToMainMenu();
+            }
         }
 
         #endregion
@@ -189,5 +200,34 @@ namespace Magnetar
         }
 
         #endregion
+
+        private void UpdateThrusterEffects()
+        {
+            bool isPositive = MagnetComponent.magnetismStrength >= 0;
+
+            foreach (var effect in PositiveModeThrusterEffects)
+            {
+                if(isPositive)
+                {
+                    effect.Play();
+                }
+                else
+                {
+                    effect.Stop();
+                }
+            }
+
+            foreach (var effect in NegativeModeThrusterEffects)
+            {
+                if (isPositive)
+                {
+                    effect.Stop();
+                }
+                else
+                {
+                    effect.Play();
+                }
+            }
+        }
     }
 }

@@ -16,6 +16,8 @@ namespace Magnetar
 
     public class Magnet : MonoBehaviour
     {
+        public const float MAX_VELOCITY_MAGNITUDE = 100.0f;
+
         public static List<Magnet> AllMagnets = new List<Magnet>();
 
         public EMagnetType magnetismType = EMagnetType.DirectedMagnet;
@@ -66,7 +68,7 @@ namespace Magnetar
                 desiredVector += vecToOther.normalized * othersForceOnMe;
             }
 
-            DesiredWorldVelocity = desiredVector;
+            DesiredWorldVelocity = desiredVector.normalized * Mathf.Min(desiredVector.magnitude, MAX_VELOCITY_MAGNITUDE);
         }
     }
 }

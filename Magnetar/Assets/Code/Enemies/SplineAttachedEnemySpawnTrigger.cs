@@ -12,6 +12,7 @@ namespace Magnetar
         [field: SerializeField] public BezierSpline SplineToAttachTo { get; set; }
         [field: SerializeField] public List<AbstractEnemy> EnemiesToSpawn { get; set; } = new List<AbstractEnemy>();
         [field: SerializeField] public List<EnemySpawnTemplate> EnemyTemplatesToSpawn { get; set; } = new List<EnemySpawnTemplate>();
+        private List<EnemySpawnTemplate> enemyTemplateInstances = new List<EnemySpawnTemplate>();
 
         public int SplineTriggerPoint { get; private set; }
         public bool IsArmed { get; private set; }
@@ -42,6 +43,11 @@ namespace Magnetar
                 {
                     enemy.gameObject.SetActive(false);
                 }
+            }
+
+            foreach (var template in EnemyTemplatesToSpawn)
+            {
+                enemyTemplateInstances.Add(Instantiate(template));
             }
         }
 
@@ -74,7 +80,7 @@ namespace Magnetar
                 enemy.Spawn();
             }
 
-            foreach (var template in EnemyTemplatesToSpawn)
+            foreach (var template in enemyTemplateInstances)
             {
                 template.Spawn();
             }
@@ -88,11 +94,6 @@ namespace Magnetar
             foreach(var enemy in EnemiesToSpawn)
             {
                 Gizmos.DrawLine(transform.position, enemy.transform.position);
-            }
-
-            foreach(var template in EnemyTemplatesToSpawn)
-            {
-                Gizmos.DrawLine(transform.position, template.transform.position);
             }
         }
     }

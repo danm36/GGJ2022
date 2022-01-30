@@ -14,6 +14,8 @@ namespace Magnetar
         public static PlayableZoneController Instance { get; private set; }
         public bool IsPlaying { get; private set; }
         public bool PlayerHasControl { get; private set; }
+        [field: SerializeField] public bool IsTwoShipMode { get; set; }
+
         public Vector3 Velocity { get; private set; }
 
         public Vector2 PlayerBounds { get; private set; } = new Vector2(DEFAULT_PLAYER_BOUNDS.x, DEFAULT_PLAYER_BOUNDS.y);
@@ -23,22 +25,40 @@ namespace Magnetar
         private float splineProgress = 0.0f;
         [field: SerializeField] public float SplineProgressionSpeed { get; private set; } = 32.0f;
 
+        [field: SerializeField] public PlayerHUD PlayerHUDPrefab { get; private set; }
+        public PlayerHUD PlayerHUD { get; private set; }
+
+        [field: SerializeField] public PlayerController SinglePlayerShip { get; private set; }
+        [field: SerializeField] public PlayerController Player1Ship { get; private set; }
+        [field: SerializeField] public PlayerController Player2Ship { get; private set; }
+
         [field: SerializeField] public CinemachineVirtualCamera IntroCamera { get; private set; }
+        [field: SerializeField] public CinemachineVirtualCamera IntroCameraTwoPlayer { get; private set; }
         [field: SerializeField] public float IntroCameraHoldTime { get; private set; } = 2.5f;
         [field: SerializeField] public CinemachineVirtualCamera DefaultCamera { get; private set; }
         private List<CinemachineVirtualCamera> cameras = new List<CinemachineVirtualCamera>();
 
-        public PlayerController Player { get; private set; }
+        public List<PlayerController> Players { get; private set; } = new List<PlayerController>();
         public BoxCollider EnemySpawnTrigger { get; private set; }
 
+        private BezierEnemyTriggerSpawner bezierEnemySpawnTrigger;
 
         // Start is called before the first frame update
         void Awake()
         {
-            Player = GetComponentInChildren<PlayerController>();
+            if (Instance != null)
+            {
+                Destroy(Instance);
+            }
+            Instance = this;
+
             EnemySpawnTrigger = GetComponent<BoxCollider>();
             EnemySpawnTrigger.isTrigger = true;
             EnemySpawnTrigger.size = new Vector3(PlayerBounds.x * 2, 8.0f, PlayerBounds.y * 2.0f);
+
+            SinglePlayerShip.gameObject.SetActive(false);
+            Player1Ship.gameObject.SetActive(false);
+            Player2Ship.gameObject.SetActive(false);
 
             foreach (var cam in GetComponentsInChildren<CinemachineVirtualCamera>())
             {
@@ -48,24 +68,44 @@ namespace Magnetar
             IntroCamera.enabled = true;
         }
 
-        void Start()
-        {
-            if (TargetSpline != null)
-            {
-                Initialize();
-            }
-        }
-
         public void Initialize()
         {
-            if(Instance != null)
+            if(TargetSpline == null)
             {
-                Destroy(Instance);
+                Debug.LogError("Could not start game. Target Spline was null!");
+                return;
             }
-            Instance = this;
+
+            PlayerHUD = Instantiate(PlayerHUDPrefab);
+
+            if (IsTwoShipMode)
+            {
+                SinglePlayerShip.gameObject.SetActive(false);
+                Player1Ship.gameObject.SetActive(true);
+                Player2Ship.gameObject.SetActive(true);
+
+                Players.Add(Player1Ship);
+                Players.Add(Player2Ship);
+
+                PlayerHUD.Initialize(Player1Ship, Player2Ship);
+
+                IntroCameraTwoPlayer.enabled = true;
+                IntroCamera.enabled = false;
+            }
+            else
+            {
+                SinglePlayerShip.gameObject.SetActive(true);
+                Player1Ship.gameObject.SetActive(false);
+                Player2Ship.gameObject.SetActive(false);
+
+                Players.Add(SinglePlayerShip);
+
+                PlayerHUD.Initialize(SinglePlayerShip);
+            }
 
             splinePath = new SplinePath();
             TargetSpline.GetEvenlySpacedPoints(1.0f, splinePath);
+            bezierEnemySpawnTrigger = TargetSpline.GetComponent<BezierEnemyTriggerSpawner>();
 
             StartCoroutine(Initialize_Intro());
 
@@ -76,10 +116,12 @@ namespace Magnetar
         {
             yield return new WaitForSeconds(IntroCameraHoldTime);
             IntroCamera.enabled = false;
+            IntroCameraTwoPlayer.enabled = false;
             DefaultCamera.enabled = true;
 
             yield return new WaitForSeconds(0.5f);
             PlayerHasControl = true;
+            PlayerHUD.BeginGameplay();
         }
 
         // Update is called once per frame
@@ -99,6 +141,10 @@ namespace Magnetar
             {
                 point1Idx = Mathf.FloorToInt(splineProgress) % splinePath.Points.Count;
                 point2Idx = Mathf.CeilToInt(splineProgress) % splinePath.Points.Count;
+                if(point2Idx == point1Idx)
+                {
+                    point2Idx = (point2Idx + 1) % splinePath.Points.Count;
+                }
             }
             else
             {
@@ -116,6 +162,10 @@ namespace Magnetar
             Vector3 point1 = splinePath.Points[point1Idx];
             Vector3 point2 = splinePath.Points[point2Idx];
             Vector3 forward = (point2 - point1).normalized;
+            if(forward.sqrMagnitude < 0.1f)
+            {
+                forward = transform.forward;
+            }
             float lerpProgress = splineProgress - point1Idx;
 
             transform.position = Vector3.Lerp(splinePath.Points[point1Idx], splinePath.Points[point2Idx], lerpProgress);
@@ -126,6 +176,11 @@ namespace Magnetar
 
             splineProgress += Time.deltaTime * SplineProgressionSpeed;
             Velocity = (transform.position - oldPosition) / Time.deltaTime; 
+
+            if(bezierEnemySpawnTrigger != null)
+            {
+                bezierEnemySpawnTrigger.UpdatePlayerProgression(splineProgress);
+            }
 
             foreach(var trigger in SplineAttachedEnemySpawnTrigger.ArmedTriggers)
             {

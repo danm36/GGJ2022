@@ -26,12 +26,12 @@ namespace Magnetar
 
         public void Spawn()
         {
-            Debug.Log("SPAWNING");
-
             foreach (var enemy in EnemiesToSpawn)
             {
                 enemy.Spawn();
             }
+
+            Destroy(gameObject);
         }
 
 #if UNITY_EDITOR

@@ -60,7 +60,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 302930a62580691409e23497b6bf8176, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  <MaxHealth>k__BackingField: 2
+  <MaxHealth>k__BackingField: 3
   <CurrentHealth>k__BackingField: -1
 --- !u!114 &3610924016868465284
 MonoBehaviour:
@@ -76,12 +76,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   <ExistsInBackground>k__BackingField: 0
   <StartsAwake>k__BackingField: 0
+  <CanAttackEvenWhenNotInArena>k__BackingField: 0
+  <FlyInDirection>k__BackingField: 0
+  <FlyInDelay>k__BackingField: 0
+  <FlyOutDirection>k__BackingField: 0
+  <FlyOutDelay>k__BackingField: 0
   <HitEffect>k__BackingField: {fileID: 6440599582345667430, guid: 7c0d2d798d1139a47889be1e3ebb6292,
     type: 3}
   <DeathEffect>k__BackingField: {fileID: 2763103092331272050, guid: 66f57ce675a26f145a96f4f736b550d7,
     type: 3}
   <EquippedWeapons>k__BackingField:
-  - {fileID: 11400000, guid: 17ad7317acf71cc4d97139aa6aa22081, type: 2}
+  - {fileID: 11400000, guid: 3fbb60c24a9cde449a47f77460066e75, type: 2}
   <TrackPlayer>k__BackingField: 1
 --- !u!1001 &5334566913242662397
 PrefabInstance:

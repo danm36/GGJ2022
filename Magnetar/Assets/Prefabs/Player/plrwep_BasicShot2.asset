@@ -16,10 +16,14 @@ MonoBehaviour:
   slot: 0
   equipCost: 3
   bullets:
-  - bullet: {fileID: 598623776962539544, guid: 918ce66ac3e3073479a38fa831a702e8, type: 3}
-    spawnOffset: {x: -3, y: 0}
-    initialVelocity: {x: 0, y: 128}
-  - bullet: {fileID: 598623776962539544, guid: 918ce66ac3e3073479a38fa831a702e8, type: 3}
-    spawnOffset: {x: 3, y: 0}
-    initialVelocity: {x: 0, y: 128}
+  - bullet: {fileID: 2022686890363381599, guid: 9a1e9f467ed80bb4c85bc2c39c2518e8,
+      type: 3}
+    spawnOffset: {x: -2, y: 0}
+    initialDirection: {x: 0, y: 1}
+    initialSpeed: 64
+  - bullet: {fileID: 2022686890363381599, guid: 9a1e9f467ed80bb4c85bc2c39c2518e8,
+      type: 3}
+    spawnOffset: {x: 2, y: 0}
+    initialDirection: {x: 0, y: 1}
+    initialSpeed: 64
   shotCooldown: 0.3

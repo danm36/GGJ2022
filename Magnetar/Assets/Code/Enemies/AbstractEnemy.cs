@@ -77,6 +77,7 @@ namespace Magnetar
             if (!ExistsInBackground)
             {
                 transform.SetParent(PlayableZoneController.Instance.transform, false);
+                transform.localEulerAngles = new Vector3(0.0f, transform.localEulerAngles.y, 0.0f);
             }
 
             if (FlyInDirection != EEnemyFlyTransitionDirection.None)

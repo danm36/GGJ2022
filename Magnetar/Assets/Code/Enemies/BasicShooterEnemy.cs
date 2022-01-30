@@ -7,6 +7,13 @@ namespace Magnetar
     public class BasicShooterEnemy : AbstractEnemy
     {
         [field: SerializeField] public bool TrackPlayer { get; private set; }
+        private PlayerController trackingPlayer;
+
+        protected override void OnEnable()
+        {
+            base.OnEnable();
+            trackingPlayer = PlayableZoneController.Instance.Players.Random();
+        }
 
         protected override void OnUpdate()
         {
@@ -14,7 +21,7 @@ namespace Magnetar
             {
                 transform.rotation = Quaternion.Slerp(
                     transform.rotation,
-                    Quaternion.LookRotation(PlayableZoneController.Instance.Player.transform.position - transform.position, transform.up),
+                    Quaternion.LookRotation(trackingPlayer.transform.position - transform.position, transform.up),
                     0.1f);
             }
 

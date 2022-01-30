@@ -17,6 +17,7 @@ namespace Magnetar
         private Vector3 globalVelocity = Vector3.zero;
         private float elapsedLife = 0.0f;
         public Magnet MyMagnet { get; private set; }
+        public Rigidbody Rigidbody { get; private set; }
 
         /// <summary>
         /// Sets up the bullet as if it's just spawned.
@@ -42,12 +43,14 @@ namespace Magnetar
             transform.rotation = spawnRotation;
             localVelocity = initialVelocity;
             globalVelocity = Vector3.zero;
+            Rigidbody.velocity = Vector3.zero;
             elapsedLife = 0.0f;
         }
 
-        private void Start()
+        private void Awake()
         {
             MyMagnet = GetComponent<Magnet>();
+            Rigidbody = GetComponent<Rigidbody>();
         }
 
         protected virtual void Update()

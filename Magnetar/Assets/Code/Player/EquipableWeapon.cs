@@ -20,7 +20,8 @@ namespace Magnetar
         {
             public Bullet bullet;
             public Vector2 spawnOffset = Vector2.zero;
-            public Vector2 initialVelocity = new Vector2(0, 1);
+            public Vector2 initialDirection = new Vector2(0, 1);
+            public float initialSpeed = 24.0f;
         }
 
         public string displayName = "Unknown Weapon";
@@ -35,7 +36,7 @@ namespace Magnetar
             {
                 Bullet b = BulletPool.Instance.GetBullet(e.bullet);
                 // TODO: Velocity isn't working
-                b.Initialize(bulletSpawnSpace, spawnPosition + bulletSpawnSpace.rotation * new Vector3(e.spawnOffset.x, 0.0f, e.spawnOffset.y), spawnRotation, new Vector3(e.initialVelocity.x, 0.0f, e.initialVelocity.y), playerID);
+                b.Initialize(bulletSpawnSpace, spawnPosition + spawnRotation * new Vector3(e.spawnOffset.x, 0.0f, e.spawnOffset.y), spawnRotation, new Vector3(e.initialDirection.x, 0.0f, e.initialDirection.y).normalized * e.initialSpeed, playerID);
             }
         }
     }

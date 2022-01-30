@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1277289bc1b62244a8cd7f869c220656, type: 3}
+  m_Name: enemywep_Dual_Negative
+  m_EditorClassIdentifier: 
+  displayName: '[ENEMY WEAPON]'
+  slot: 0
+  equipCost: 2
+  bullets:
+  - bullet: {fileID: 2022686890363381599, guid: 793c0e16098247944b2ef1483c347002,
+      type: 3}
+    spawnOffset: {x: -2, y: 7}
+    initialVelocity: {x: 0, y: 32}
+  - bullet: {fileID: 2022686890363381599, guid: 793c0e16098247944b2ef1483c347002,
+      type: 3}
+    spawnOffset: {x: 2, y: 7}
+    initialVelocity: {x: 0, y: 32}
+  shotCooldown: 0.8
