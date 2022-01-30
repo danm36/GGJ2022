@@ -12,6 +12,7 @@ namespace Magnetar
     {
         const float MAX_Z_TILT = 15.0f;
         const float BOUNDS_RECOVERY_RATE = 30.0f;
+        const float IMPACT_ALERT_INTERVAL = 3.0f;
 
         public static bool AutofireEnabled { get; private set; } = true;
 
@@ -21,21 +22,26 @@ namespace Magnetar
         [field: SerializeField] public Transform ModelTransform { get; private set; }
         [field: SerializeField] public OneShotEffect HitEffect { get; private set; }
         [field: SerializeField] public OneShotEffect DeathEffect { get; private set; }
+        [field: SerializeField] public AudioClip ImpactAlert { get; private set; }
+        private float timeStampOfLastAlert;
+
         [field: SerializeField] public List<VisualEffect> PositiveModeThrusterEffects { get; private set; }
         [field: SerializeField] public List<VisualEffect> NegativeModeThrusterEffects { get; private set; }
 
         [field: SerializeField] public float MaxShipSpeed { get; private set; } = 60.0f;
         [field: SerializeField] public float BoostMultiplier { get; private set; } = 2.5f;
 
-        Vector2 moveVec = Vector2.zero;
-        Vector3 velocity = Vector3.zero;
-        private bool isBoosting = false;
-
         public HealthComponent HealthComponent { get; private set; }
         public Magnet MagnetComponent { get; private set; }
+        public AudioSource AudioSourceComponent { get; private set; }
 
         [field: SerializeField] public List<EquipableWeapon> EquippedWeapons { get; private set; } = new List<EquipableWeapon>();
         private List<RuntimeWeaponTrackingEntry> weapons = new List<RuntimeWeaponTrackingEntry>();
+        [field: SerializeField] public AudioClip ShootSoundEffect { get; private set; }
+
+        Vector2 moveVec = Vector2.zero;
+        Vector3 velocity = Vector3.zero;
+        private bool isBoosting = false;
 
         private bool isShooting = false;
 
@@ -69,6 +75,7 @@ namespace Magnetar
                 }
             }
 
+            AudioSourceComponent = GetComponent<AudioSource>();
         }
 
         private void OnDisable()
@@ -87,9 +94,12 @@ namespace Magnetar
             {
                 w.Update();
 
-                if(isShooting || AutofireEnabled)
+                if(Parent.PlayerHasControl && (isShooting || AutofireEnabled))
                 {
-                    w.TryShoot(Parent.transform, transform.position, transform.rotation, PlayerID);
+                    if(w.TryShoot(Parent.transform, transform.position, transform.rotation, PlayerID))
+                    {
+                        AudioSourceComponent.PlayOneShot(ShootSoundEffect);
+                    }
                 }
             }
 
@@ -167,10 +177,9 @@ namespace Magnetar
 
         public void OnOpenPauseMenu(InputValue value)
         {
-            // TODO: Don't just immediately go to the main menu.
             if (value.isPressed)
             {
-                GamePersistance.Instance.GoToMainMenu();
+                Parent.PlayerHUD.TogglePause();
             }
         }
 
@@ -186,6 +195,12 @@ namespace Magnetar
                 Instantiate(HitEffect, contact.point, Quaternion.LookRotation(contact.normal), transform);
             }
 
+            if(Time.unscaledTime - timeStampOfLastAlert > IMPACT_ALERT_INTERVAL)
+            {
+                timeStampOfLastAlert = Time.unscaledTime;
+                UISoundPlayer.Instance.AudioSource.PlayOneShot(ImpactAlert);
+            }
+
             Debug.Log($"Player was hurt by {hurtAmount} - Current health: {currentHealth}");
         }
 
@@ -194,6 +209,8 @@ namespace Magnetar
             if (DeathEffect != null)
             {
                 Instantiate(DeathEffect, transform.position, transform.rotation, transform.parent);
+                gameObject.SetActive(false);
+                Parent.PlayerHUD.ShowGameOver();
             }
 
             Debug.Log($"Player is dead!");

@@ -15,6 +15,12 @@ namespace Magnetar
         Right,
     }
 
+    public enum EMotionMode
+    {
+        Static,
+        MoveDownOverTime
+    }
+
     [RequireComponent(typeof(Collider), typeof(HealthComponent))]
     public abstract class AbstractEnemy : MonoBehaviour
     {
@@ -28,14 +34,20 @@ namespace Magnetar
         [field: SerializeField] public float FlyInDelay { get; private set; } = 0.0f;
         [field: SerializeField] public EEnemyFlyTransitionDirection FlyOutDirection { get; private set; } = EEnemyFlyTransitionDirection.None;
         [field: SerializeField] public float FlyOutDelay { get; private set; } = 0.0f;
+        [field: SerializeField] public EMotionMode MotionMode { get; set; } = EMotionMode.Static;
+        [field: SerializeField] public float MotionModeSpeed { get; set; } = 16.0f;
         [field: SerializeField] public OneShotEffect HitEffect { get; private set; }
         [field: SerializeField] public OneShotEffect DeathEffect { get; private set; }
 
         [field: SerializeField] public List<EquipableWeapon> EquippedWeapons { get; private set; } = new List<EquipableWeapon>();
         protected readonly List<RuntimeWeaponTrackingEntry> weapons = new List<RuntimeWeaponTrackingEntry>();
+        [field: SerializeField] public AudioClip ShootSoundEffect { get; private set; }
+
+        public AudioSource AudioSourceComponent { get; private set; }
 
         private float elapsed;
         private Collider myCollider;
+        private float motionElapsedDistance = 0.0f;
 
         protected virtual void OnEnable()
         {
@@ -59,6 +71,8 @@ namespace Magnetar
                     weapons.Add(new RuntimeWeaponTrackingEntry(weapon));
                 }
             }
+
+            AudioSourceComponent = GetComponent<AudioSource>();
         }
 
         protected virtual void OnDisable()
@@ -70,13 +84,13 @@ namespace Magnetar
             }
         }
 
-        public void Spawn()
+        public void Spawn(bool isAlreadyInWorldSpace= false)
         {
             gameObject.SetActive(true);
 
             if (!ExistsInBackground)
             {
-                transform.SetParent(PlayableZoneController.Instance.transform, false);
+                transform.SetParent(PlayableZoneController.Instance.transform, isAlreadyInWorldSpace);
                 transform.localEulerAngles = new Vector3(0.0f, transform.localEulerAngles.y, 0.0f);
             }
 
@@ -100,6 +114,16 @@ namespace Magnetar
                 {
                     IsActiveInArena = false;
                     StartCoroutine(PerformFlyOutTransition());
+                }
+            }
+
+            if(MotionMode == EMotionMode.MoveDownOverTime)
+            {
+                motionElapsedDistance += Time.deltaTime * MotionModeSpeed;
+                transform.Translate(new Vector3(0.0f, 0.0f, Time.deltaTime * MotionModeSpeed), Space.Self);
+                if (motionElapsedDistance > PlayableZoneController.DEFAULT_PLAYER_BOUNDS.y * 2.0f)
+                {
+                    Destroy(gameObject);
                 }
             }
 

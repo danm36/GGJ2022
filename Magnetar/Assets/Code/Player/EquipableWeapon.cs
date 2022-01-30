@@ -56,13 +56,16 @@ namespace Magnetar
             Cooldown -= Time.deltaTime;
         }
 
-        public void TryShoot(Transform bulletSpawnSpace, Vector3 spawnPosition, Quaternion spawnRotation, int playerID = 0)
+        public bool TryShoot(Transform bulletSpawnSpace, Vector3 spawnPosition, Quaternion spawnRotation, int playerID = 0)
         {
             if (Weapon != null && Cooldown <= 0.0f)
             {
                 Weapon.SpawnBullets(bulletSpawnSpace, spawnPosition, spawnRotation, playerID);
                 Cooldown = Weapon.shotCooldown;
+                return true;
             }
+
+            return false;
         }
     }
 }

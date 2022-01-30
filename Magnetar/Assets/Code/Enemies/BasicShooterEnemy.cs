@@ -30,7 +30,10 @@ namespace Magnetar
                 foreach (RuntimeWeaponTrackingEntry w in weapons)
                 {
                     w.Update();
-                    w.TryShoot(ExistsInBackground ? null : PlayableZoneController.Instance.transform, transform.position, transform.rotation);
+                    if(w.TryShoot(ExistsInBackground ? null : PlayableZoneController.Instance.transform, transform.position, transform.rotation))
+                    {
+                        AudioSourceComponent.PlayOneShot(ShootSoundEffect);
+                    }
                 }
             }
         }

@@ -14,6 +14,7 @@ namespace Magnetar
         public static PlayableZoneController Instance { get; private set; }
         public bool IsPlaying { get; private set; }
         public bool PlayerHasControl { get; private set; }
+        public bool IsGameOver { get; private set; }
         [field: SerializeField] public bool IsTwoShipMode { get; set; }
 
         public Vector3 Velocity { get; private set; }
@@ -174,6 +175,11 @@ namespace Magnetar
                 Quaternion.LookRotation(forward, splinePath.Normals[point2Idx]),
                 lerpProgress);
 
+            if(IsGameOver)
+            {
+                SplineProgressionSpeed = Mathf.Max(0.0f, SplineProgressionSpeed - Time.deltaTime * 8.0f);
+            }
+
             splineProgress += Time.deltaTime * SplineProgressionSpeed;
             Velocity = (transform.position - oldPosition) / Time.deltaTime; 
 
@@ -189,6 +195,40 @@ namespace Magnetar
                     trigger.Trigger();
                 }
             }
+        }
+
+        public void GameOver()
+        {
+            IsGameOver = true;
+            PlayerHasControl = false;
+            PlayerHUD.ShowGameOver();
+        }
+
+        public void MissionComplete()
+        {
+            StartCoroutine(DoMissionComplete());
+        }
+
+        private IEnumerator DoMissionComplete()
+        {
+            PlayerHasControl = false;
+            foreach (var cam in cameras)
+            {
+                cam.enabled = false;
+            }
+
+            if (IsTwoShipMode)
+            {
+                IntroCameraTwoPlayer.enabled = true;
+            }
+            else
+            {
+                IntroCamera.enabled = true;
+            }
+
+            yield return new WaitForSeconds(2.0f);
+
+            PlayerHUD.ShowMissionComplete();
         }
 
 #if UNITY_EDITOR

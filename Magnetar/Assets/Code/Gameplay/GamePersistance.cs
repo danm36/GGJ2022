@@ -12,17 +12,32 @@ namespace Magnetar
 
         public static GamePersistance Instance { get; private set; }
 
+        [field: SerializeField] public Canvas LoadingCanvasContainer { get; private set; }
         [field: SerializeField] public CanvasGroup LoadingCanvas { get; private set; }
 
         private string previouslyLoadedScene = null;
 
         void Awake()
         {
+            if(Instance != null)
+            {
+                Debug.Log("TRYING TO ALREADY CREATE A GAMEPERSISTANCE OBJECT WHEN ONE ALREADY EXISTS!");
+                return;
+            }
             Instance = this;
+
+            LoadingCanvasContainer.gameObject.SetActive(true);
         }
 
         private void Start()
         {
+            if (Instance != this)
+            {
+                Destroy(gameObject);
+                Debug.Log("Destroying duplicate GamePersistance object.");
+                return;
+            }
+
 #if UNITY_EDITOR
             Scene activeScene = SceneManager.GetActiveScene();
             if (activeScene == SceneManager.GetSceneByName("_GamePersistance"))
@@ -60,7 +75,7 @@ namespace Magnetar
         {
             if (previouslyLoadedScene != null)
             {
-                for (float i = 0.0f; i < 1.0f; i += Time.deltaTime / LOADING_FADE_TIME)
+                for (float i = 0.0f; i < 1.0f; i += Time.unscaledDeltaTime / LOADING_FADE_TIME)
                 {
                     LoadingCanvas.alpha = i;
                     yield return null;
@@ -90,7 +105,7 @@ namespace Magnetar
                 yield return onCompleted(scene);
             }
 
-            for (float i = 1.0f; i  > 0.0f; i -= Time.deltaTime / LOADING_FADE_TIME)
+            for (float i = 1.0f; i  > 0.0f; i -= Time.unscaledDeltaTime / LOADING_FADE_TIME)
             {
                 LoadingCanvas.alpha = i;
                 yield return null;
